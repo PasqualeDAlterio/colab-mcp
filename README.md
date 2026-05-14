@@ -149,6 +149,21 @@ Agent: execute_cell(cellIndex=0)
 
 ---
 
+## CLI Reference
+
+Once installed (via `uv run` or `uvx git+https://github.com/SebastianGilPinzon/colab-mcp`), the `colab-mcp` command supports these flags:
+
+| Flag | Description |
+|------|-------------|
+| _(none)_ | Start the MCP server (default — reads/writes JSON-RPC on stdin/stdout) |
+| `-l DIR`, `--log DIR` | Write logs to `DIR`. Defaults to a temp dir under `%TEMP%` / `$TMPDIR` |
+| `-p`, `--enable-proxy` | Enable the runtime proxy that exposes browser-based notebook tools. On by default |
+| `--client-oauth-config PATH` | Path to OAuth client-secrets JSON. Enables the `change_runtime` tool for programmatic GPU assignment |
+| `--list-running` | Print every currently-running `colab-mcp` server (pid, port, host, start time) and exit. Useful when "Disconnected from the local Colab MCP server" appears |
+| `--kill-stale` | Terminate every running `colab-mcp` server, clear its registry entry, and exit. Use this from a regular shell (NOT from inside Claude Code) before starting a fresh session |
+
+The server maintains a tiny registry at `%LOCALAPPDATA%\colab-mcp\registry.json` (Windows) or `~/.colab-mcp/registry.json` (macOS/Linux). Each running instance writes a `{pid, port, host, started_at}` entry on startup and removes it on clean shutdown. Stale entries from crashed processes are pruned automatically the next time `colab-mcp` starts.
+
 ## Troubleshooting
 
 ### Tools don't appear after setup
