@@ -13,6 +13,7 @@
 # limitations under the License.
 
 import asyncio
+import os
 from collections.abc import AsyncIterator
 import contextlib
 from contextlib import AsyncExitStack
@@ -220,9 +221,16 @@ def _make_injected_tools(
     async def check_session_proxy_tool_fn() -> bool:
         if proxy_client.is_connected():
             return True
-        webbrowser.open_new(
-            f"{COLAB}{SCRATCH_PATH}#mcpProxyToken={proxy_client.wss.token}&mcpProxyPort={proxy_client.wss.port}"
-        )
+        # Allow overriding the landing notebook via env var so users can pre-set
+        # GPU runtime, project setup, etc via notebook metadata instead of
+        # clicking through Runtime → Change runtime type every session.
+        # Default behaviour (empty scratch) is unchanged when the env var is unset.
+        landing = os.environ.get("COLAB_MCP_LANDING_URL")
+        if landing:
+            url = f"{landing}#mcpProxyToken={proxy_client.wss.token}&mcpProxyPort={proxy_client.wss.port}"
+        else:
+            url = f"{COLAB}{SCRATCH_PATH}#mcpProxyToken={proxy_client.wss.token}&mcpProxyPort={proxy_client.wss.port}"
+        webbrowser.open_new(url)
         return False
 
     async def add_code_cell_stub(code: str = "", cellIndex: int = 0, language: str = "python") -> str:
