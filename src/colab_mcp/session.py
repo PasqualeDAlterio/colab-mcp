@@ -230,6 +230,16 @@ def _make_injected_tools(
             url = f"{landing}#mcpProxyToken={proxy_client.wss.token}&mcpProxyPort={proxy_client.wss.port}"
         else:
             url = f"{COLAB}{SCRATCH_PATH}#mcpProxyToken={proxy_client.wss.token}&mcpProxyPort={proxy_client.wss.port}"
+        # Diagnostic log — both stderr and a temp file so we can see what URL
+        # webbrowser.open_new was called with, independent of how stdout/stderr
+        # are consumed by the MCP transport.
+        import pathlib, sys, time
+        log_line = f"[{time.strftime('%H:%M:%S')}] [colab-mcp] open_url landing_env={landing!r} url={url}"
+        print(log_line, file=sys.stderr, flush=True)
+        try:
+            pathlib.Path("/tmp/colab-mcp-last-url.txt").write_text(url + "\n")
+        except Exception:
+            pass
         webbrowser.open_new(url)
         return False
 
