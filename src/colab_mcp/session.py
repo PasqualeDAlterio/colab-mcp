@@ -237,6 +237,25 @@ def _make_injected_tools(
     async def update_cell_stub(cellId: str = "", content: str = "") -> str:
         return NOT_CONNECTED_MSG
 
+    # Stubs for the 4 additional notebook tools the runtime advertises but the
+    # original fork didn't pre-register. Without these, Claude Code-class clients
+    # (which don't honor notifications/tools/list_changed mid-session) can't
+    # call read/run/delete/move operations even after a successful connection.
+    # Param signatures are ruben-deice's best guess from the runtime's post-
+    # connection success message; if they don't match the real proxy, we get
+    # a clear error at call time rather than silent unavailability.
+    async def run_code_cell_stub(code: str = "") -> str:
+        return NOT_CONNECTED_MSG
+
+    async def get_cells_stub() -> str:
+        return NOT_CONNECTED_MSG
+
+    async def delete_cell_stub(cellId: str = "", cellIndex: int = 0) -> str:
+        return NOT_CONNECTED_MSG
+
+    async def move_cell_stub(cellId: str = "", fromIndex: int = 0, toIndex: int = 0) -> str:
+        return NOT_CONNECTED_MSG
+
     return [
         Tool.from_function(
             fn=check_session_proxy_tool_fn,
@@ -256,12 +275,32 @@ def _make_injected_tools(
         Tool.from_function(
             fn=execute_cell_stub,
             name="execute_cell",
-            description="Execute a cell in the Colab notebook. Requires an active browser connection via open_colab_browser_connection.",
+            description="Execute an existing cell in the Colab notebook by index. Requires an active browser connection via open_colab_browser_connection.",
         ),
         Tool.from_function(
             fn=update_cell_stub,
             name="update_cell",
             description="Update the contents of an existing cell in the Colab notebook. Requires an active browser connection via open_colab_browser_connection.",
+        ),
+        Tool.from_function(
+            fn=run_code_cell_stub,
+            name="run_code_cell",
+            description="Add a new code cell with the given code and execute it. Returns the cell output. Requires an active browser connection via open_colab_browser_connection.",
+        ),
+        Tool.from_function(
+            fn=get_cells_stub,
+            name="get_cells",
+            description="Return the current notebook's cells with their IDs, indices, sources, and outputs. Required for any iterative workflow (write -> run -> read result -> adjust). Requires an active browser connection via open_colab_browser_connection.",
+        ),
+        Tool.from_function(
+            fn=delete_cell_stub,
+            name="delete_cell",
+            description="Delete a cell from the Colab notebook by ID or index. Requires an active browser connection via open_colab_browser_connection.",
+        ),
+        Tool.from_function(
+            fn=move_cell_stub,
+            name="move_cell",
+            description="Move a cell from one position to another in the Colab notebook. Requires an active browser connection via open_colab_browser_connection.",
         ),
     ]
 

@@ -131,6 +131,39 @@ async def update_cell(cellId: str = "", content: str = "") -> str:
 
 
 @mcp.tool()
+async def get_cells() -> str:
+    """Return all cells in the current Colab notebook with their IDs, indices, sources, and outputs.
+
+    REQUIRED for any iterative workflow (write -> run -> read result -> adjust). Without this,
+    an agent loses track of the notebook state after each operation. Requires an active browser
+    connection via open_colab_browser_connection.
+    """
+    return await _forward_or_stub("get_cells", {})
+
+
+@mcp.tool()
+async def delete_cell(cellId: str = "", cellIndex: int = 0) -> str:
+    """Delete a cell from the Colab notebook by ID (preferred) or index. Requires an active browser connection via open_colab_browser_connection."""
+    args: dict = {}
+    if cellId:
+        args["cellId"] = cellId
+    else:
+        args["cellIndex"] = cellIndex
+    return await _forward_or_stub("delete_cell", args)
+
+
+@mcp.tool()
+async def move_cell(cellId: str = "", fromIndex: int = 0, toIndex: int = 0) -> str:
+    """Move a cell to a new position in the Colab notebook. Pass cellId (preferred) or fromIndex; toIndex is required. Requires an active browser connection via open_colab_browser_connection."""
+    args: dict = {"toIndex": toIndex}
+    if cellId:
+        args["cellId"] = cellId
+    else:
+        args["fromIndex"] = fromIndex
+    return await _forward_or_stub("move_cell", args)
+
+
+@mcp.tool()
 async def change_runtime(accelerator: str = "T4") -> str:
     """Change the Colab runtime to use a specific GPU accelerator. Valid values: NONE, T4, L4, A100. Requires OAuth setup (first time opens browser for consent)."""
     if _colab_client is None:

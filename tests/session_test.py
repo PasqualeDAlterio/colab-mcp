@@ -73,6 +73,10 @@ class TestDirectTools:
                 "add_text_cell",
                 "execute_cell",
                 "update_cell",
+                "get_cells",
+                "delete_cell",
+                "move_cell",
+                "change_runtime",
             }
 
     @pytest.mark.asyncio
@@ -258,6 +262,10 @@ class TestInjectedTools:
             "add_text_cell",
             "execute_cell",
             "update_cell",
+            "run_code_cell",
+            "get_cells",
+            "delete_cell",
+            "move_cell",
         }
 
 
