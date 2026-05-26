@@ -60,9 +60,24 @@ async def open_colab_browser_connection() -> str:
     if _proxy_client is None:
         return "Server not initialized. Please wait and try again."
 
-    webbrowser.open_new(
-        f"{COLAB}{SCRATCH_PATH}#mcpProxyToken={_proxy_client.wss.token}&mcpProxyPort={_proxy_client.wss.port}"
-    )
+    # Allow overriding the landing notebook via env var so users can pre-set
+    # GPU runtime, project setup, etc via notebook metadata instead of
+    # clicking through Runtime → Change runtime type every session.
+    landing = os.environ.get("COLAB_MCP_LANDING_URL")
+    if landing:
+        url = f"{landing}#mcpProxyToken={_proxy_client.wss.token}&mcpProxyPort={_proxy_client.wss.port}"
+    else:
+        url = f"{COLAB}{SCRATCH_PATH}#mcpProxyToken={_proxy_client.wss.token}&mcpProxyPort={_proxy_client.wss.port}"
+    # Diagnostic: surface what URL we opened so the user can verify env-var
+    # propagation. Written to a stable temp path; ignored if unwriteable.
+    try:
+        import pathlib, time
+        pathlib.Path("/tmp/colab-mcp-last-url.txt").write_text(
+            f"[{time.strftime('%H:%M:%S')}] landing_env={landing!r}\n{url}\n"
+        )
+    except Exception:
+        pass
+    webbrowser.open_new(url)
 
     # Wait for browser to connect
     await _proxy_client.await_proxy_connection()
